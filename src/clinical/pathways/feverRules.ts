@@ -124,7 +124,7 @@ export function evaluateFeverRules(answers: PatientAnswers): DeterministicRuleOu
   const highRiskHost = cleanSelections(answers.highRiskHost);
   const hasFever = (tempC !== null && tempC >= 38.0) || answers.feverish === 'Yes' || answers.temperatureMeasured === true || answers.subjectiveFever === true;
 
-  if (highRiskHost.includes('neutropenia') && hasFever) {
+  if (highRiskHost.includes('chemo_neutropenia') || highRiskHost.includes('neutropenia') || highRiskHost.includes('chemotherapy')) {
     return {
       disposition: 'GO_TO_ED_NOW',
       ctasLevel: 2,
@@ -132,33 +132,61 @@ export function evaluateFeverRules(answers: PatientAnswers): DeterministicRuleOu
       destinationType: 'Emergency Department / Oncology Emergency',
       ruleId: 'FEVER-H01',
       ruleVersion: '1.0',
-      triggeredBy: ['Possible febrile neutropenia (known neutropenia with fever)'],
+      triggeredBy: ['Neutropenia or recent/current chemotherapy with fever'],
       safetyNet: [
-        'Contact oncology team immediately or proceed directly to an Emergency Department.',
-        'Inform triage staff immediately of neutropenia upon arrival.'
+        'Contact your oncology team immediately or proceed directly to an Emergency Department.',
+        'Inform triage staff immediately of neutropenia or chemotherapy status upon arrival.'
       ],
       requiresHumanReview: true,
-      explanation: 'Known neutropenia with fever (suspected febrile neutropenia). Requires immediate emergency medical assessment and broad-spectrum antibiotic evaluation.',
+      explanation: 'Neutropenia or current/recent chemotherapy with fever requires immediate emergency medical evaluation.',
       evidenceSource: [BC_EVIDENCE_SOURCES.QSOFA_SIRS_EVIDENCE],
       frameworksApplied: ['CTAS-inspired Urgency Estimate']
     };
   }
 
-  if (highRiskHost.includes('chemotherapy')) {
+  if (highRiskHost.includes('transplant')) {
     return {
       disposition: 'GO_TO_ED_NOW',
       ctasLevel: 2,
       timing: 'now',
-      destinationType: 'Emergency Department / Oncology Clinic',
-      ruleId: 'FEVER-H02',
+      destinationType: 'Transplant Team / Emergency Department',
+      ruleId: 'FEVER-H04',
       ruleVersion: '1.0',
-      triggeredBy: ['Recent or current chemotherapy recipient with fever'],
+      messageKey: 'TRANSPLANT_TITLE',
+      triggeredBy: ['Organ or stem-cell transplant with fever'],
       safetyNet: [
-        'Contact your oncology team immediately or proceed to an Emergency Department.',
-        'Do not delay seeking care.'
+        'Please reach out to your transplant team immediately.',
+        'Go to Emergency Department if they are unavailable.'
       ],
       requiresHumanReview: true,
-      explanation: 'Recent or current chemotherapy recipient with fever requires prompt emergency or oncology evaluation.',
+      explanation: 'Organ or stem-cell transplant recipient with fever. Reach out to your transplant team or go to Emergency Department if unavailable.',
+      evidenceSource: [BC_EVIDENCE_SOURCES.QSOFA_SIRS_EVIDENCE],
+      frameworksApplied: ['CTAS-inspired Urgency Estimate']
+    };
+  }
+
+  if (highRiskHost.includes('immunosuppressed') || highRiskHost.includes('pregnancy_postpartum') || highRiskHost.includes('immune_condition')) {
+    const isPreg = highRiskHost.includes('pregnancy_postpartum');
+    return {
+      disposition: 'SAME_DAY_CLINICAL_ASSESSMENT',
+      ctasLevel: 3,
+      timing: 'today',
+      destinationType: 'Urgent Care / Same-Day Assessment Clinic',
+      ruleId: 'FEVER-H03',
+      ruleVersion: '1.0',
+      triggeredBy: [
+        isPreg
+          ? 'Fever during pregnancy or recent postpartum period'
+          : 'Significantly weakened immune system with fever'
+      ],
+      safetyNet: [
+        'Go to your nearest urgent care clinic or arrange a same-day appointment with your family doctor.',
+        'Monitor temperature and hydration closely.'
+      ],
+      requiresHumanReview: true,
+      explanation: isPreg
+        ? 'Fever during pregnancy or the postpartum period warrants same-day medical assessment.'
+        : 'Significantly weakened immune system with fever warrants same-day medical assessment.',
       evidenceSource: [BC_EVIDENCE_SOURCES.QSOFA_SIRS_EVIDENCE],
       frameworksApplied: ['CTAS-inspired Urgency Estimate']
     };

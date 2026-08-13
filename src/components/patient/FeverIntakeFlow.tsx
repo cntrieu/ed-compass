@@ -553,12 +553,12 @@ export const FeverIntakeFlow: React.FC<FeverIntakeFlowProps> = ({
         </div>
       )}
 
-      {/* STEP 2: IMMEDIATE LIFE THREAT SCREEN */}
+      {/* STEP 2: IMMEDIATE EMERGENCY SCREEN */}
       {currentStep === 'LIFE_THREAT' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
           <div className="space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-100 inline-block">
-              Safety Screening — Step 2
+              Step 2 — Immediate emergency
             </span>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
               Is any of the following happening right now?
@@ -570,11 +570,9 @@ export const FeverIntakeFlow: React.FC<FeverIntakeFlowProps> = ({
 
           <div className="space-y-2.5">
             {[
-              { id: 'unresponsive', label: 'Unresponsive, cannot be awakened, or unable to stay awake' },
-              { id: 'not_breathing', label: 'Not breathing normally, severe difficulty breathing, or gasping' },
+              { id: 'unresponsive', label: 'Unresponsive or cannot be awakened' },
+              { id: 'not_breathing', label: 'Not breathing normally, gasping, or blue/grey lips or skin' },
               { id: 'seizure_now', label: 'A seizure is happening now' },
-              { id: 'blue_lips', label: 'Blue or grey lips or skin' },
-              { id: 'collapsed', label: 'Collapsed and appears critically unwell' },
               { id: 'NONE_OF_THESE', label: 'None of these' }
             ].map((opt) => {
               const currentList = answers.lifeThreats || ['NONE_OF_THESE'];
@@ -616,15 +614,15 @@ export const FeverIntakeFlow: React.FC<FeverIntakeFlowProps> = ({
         </div>
       )}
 
-      {/* STEP 3: EMERGENCY RED FLAGS SCREEN */}
+      {/* STEP 3: SERIOUS FEVER SYMPTOMS SCREEN */}
       {currentStep === 'EMERGENCY_FLAGS' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
           <div className="space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-100 inline-block">
-              Safety Screening — Step 3
+              Step 3 — Serious fever symptoms
             </span>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
-              Is your fever accompanied by any of the following?
+              Do you have any of these symptoms with your fever?
             </h2>
             <p className="text-xs text-slate-500">
               Select all that apply, or select "None of these".
@@ -633,11 +631,11 @@ export const FeverIntakeFlow: React.FC<FeverIntakeFlowProps> = ({
 
           <div className="space-y-2.5">
             {[
-              { id: 'confusion', label: 'New confusion, unusual behaviour, extreme drowsiness, fainting, or a new seizure' },
-              { id: 'chest_pain', label: 'Severe difficulty breathing or severe/persistent chest pain or pressure' },
-              { id: 'stiff_neck', label: 'Severe headache with a stiff neck or light hurting your eyes' },
-              { id: 'purple_rash', label: 'A purple or bruise-like rash that does not fade when pressed, or unusual bleeding/bruising' },
-              { id: 'severe_skin_pain', label: 'Severe or rapidly worsening pain, redness, swelling, or skin discoloration' },
+              { id: 'confusion', label: 'New confusion, fainting, or a recent seizure' },
+              { id: 'chest_pain', label: 'New or worsening shortness of breath or chest pain/pressure' },
+              { id: 'stiff_neck', label: 'Severe headache with stiff neck or light sensitivity' },
+              { id: 'purple_rash', label: 'Purple rash that doesn’t fade when pressed, or unusual bleeding/bruising' },
+              { id: 'severe_skin_pain', label: 'Rapidly worsening severe pain/swelling, or purple/black skin or blistering' },
               { id: 'unable_to_swallow', label: 'Unable to swallow liquids, drooling, or severe throat swelling' },
               { id: 'NONE_OF_THESE', label: 'None of these' }
             ].map((opt) => {
@@ -680,31 +678,28 @@ export const FeverIntakeFlow: React.FC<FeverIntakeFlowProps> = ({
         </div>
       )}
 
-      {/* STEP 4: HIGH RISK HOST SCREEN */}
+      {/* STEP 4: HEALTH RISKS SCREENING */}
       {currentStep === 'HIGH_RISK' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
           <div className="space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md border border-purple-100 inline-block">
-              Health Risks Screening — Step 4
+              Step 4 — Health risks screening
             </span>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
-              Do any of these apply to you?
+              Do any of these medical contexts apply to you?
             </h2>
             <p className="text-xs text-slate-500">
-              Select any medical contexts that apply to you.
+              Select all that apply, or select "None of these".
             </p>
           </div>
 
           <div className="space-y-2.5">
             {[
-              { id: 'neutropenia', label: 'I have known low white blood cell count (known neutropenia)' },
-              { id: 'chemotherapy', label: 'I am currently receiving chemotherapy or recently received chemotherapy' },
+              { id: 'chemo_neutropenia', label: 'I have neutropenia or am currently/recently receiving chemotherapy' },
               { id: 'transplant', label: 'I have had an organ or stem-cell transplant' },
-              { id: 'immunosuppressed', label: 'I take medication that significantly weakens my immune system' },
-              { id: 'immune_condition', label: 'I have another major immune-system condition' },
+              { id: 'immunosuppressed', label: 'My immune system is significantly weakened by medication or a medical condition' },
               { id: 'pregnancy_postpartum', label: 'I am pregnant or recently gave birth' },
-              { id: 'age_65', label: 'I am 65 years of age or older' },
-              { id: 'NONE_OF_THESE', label: 'None of these / I’m not sure' }
+              { id: 'NONE_OF_THESE', label: 'None of these' }
             ].map((opt) => {
               const currentList = answers.highRiskHost || ['NONE_OF_THESE'];
               const isChecked = currentList.includes(opt.id);

@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShieldCheck, Cpu, Navigation, MessageSquareHeart, ArrowRight } from 'lucide-react';
+import { useViewMode } from '../../context/ViewModeContext';
 
 interface VisualizerProps {
   currentStage: 'intake' | 'engine' | 'navigation' | 'feedback';
@@ -14,6 +15,11 @@ export const AgentHandoffVisualizer: React.FC<VisualizerProps> = ({
   ruleId,
   ruleVersion
 }) => {
+  const { viewMode } = useViewMode();
+
+  if (viewMode === 'patient') {
+    return null;
+  }
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-white shadow-sm mb-6">
       <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-3">

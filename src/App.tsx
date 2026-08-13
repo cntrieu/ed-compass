@@ -16,6 +16,7 @@ import { StaffDashboard } from './components/staff/StaffDashboard';
 import { AuditTrailView } from './components/staff/AuditTrailView';
 import { DemoRunner } from './components/demo/DemoRunner';
 import { AuditService } from './services/auditService';
+import { ViewModeProvider } from './context/ViewModeContext';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'patient' | 'demo' | 'staff' | 'audit'>('patient');
@@ -90,101 +91,103 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-sky-500 selection:text-white">
-      {/* Top Academic Disclaimer Banner */}
-      <DisclaimerBanner />
+    <ViewModeProvider>
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-sky-500 selection:text-white">
+        {/* Top Academic Disclaimer Banner */}
+        <DisclaimerBanner />
 
-      {/* Language & Communication Accessibility Selector Bar */}
-      <LanguageSelector
-        currentLocale={currentLocale}
-        onSelectLocale={handleSelectLocale}
-        isPlainLanguageMode={isPlainLanguageMode}
-        onTogglePlainLanguage={setIsPlainLanguageMode}
-        onSelectInterpreter={handleSelectInterpreter}
-      />
+        {/* Language & Communication Accessibility Selector Bar */}
+        <LanguageSelector
+          currentLocale={currentLocale}
+          onSelectLocale={handleSelectLocale}
+          isPlainLanguageMode={isPlainLanguageMode}
+          onTogglePlainLanguage={setIsPlainLanguageMode}
+          onSelectInterpreter={handleSelectInterpreter}
+        />
 
-      {/* Primary Navigation Header */}
-      <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        resetPatientFlow={resetPatientFlow}
-      />
+        {/* Primary Navigation Header */}
+        <Header
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          resetPatientFlow={resetPatientFlow}
+        />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {activeTab === 'patient' && (
-          <>
-            {patientStep === 'landing' && (
-              <LandingPage onSelectPathway={handleSelectPathway} />
-            )}
+        {/* Main Content Area */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {activeTab === 'patient' && (
+            <>
+              {patientStep === 'landing' && (
+                <LandingPage onSelectPathway={handleSelectPathway} />
+              )}
 
-            {patientStep === 'intake' && (
-              <IntakeFlow
-                scenario={selectedPathway}
-                sessionId={sessionId}
-                onCompleteIntake={handleCompleteIntake}
-                onBackToLanding={resetPatientFlow}
-              />
-            )}
+              {patientStep === 'intake' && (
+                <IntakeFlow
+                  scenario={selectedPathway}
+                  sessionId={sessionId}
+                  onCompleteIntake={handleCompleteIntake}
+                  onBackToLanding={resetPatientFlow}
+                />
+              )}
 
-            {patientStep === 'access_location' && (
-              <AccessLocationStep
-                sessionId={sessionId}
-                onCompleteAccessContext={handleCompleteAccessContext}
-                onSkipAccessContext={() => setPatientStep('recommendation')}
-              />
-            )}
+              {patientStep === 'access_location' && (
+                <AccessLocationStep
+                  sessionId={sessionId}
+                  onCompleteAccessContext={handleCompleteAccessContext}
+                  onSkipAccessContext={() => setPatientStep('recommendation')}
+                />
+              )}
 
-            {patientStep === 'recommendation' && ruleOutput && (
-              <RecommendationScreen
-                scenario={selectedPathway}
-                answers={patientAnswers}
-                ruleOutput={ruleOutput}
-                accessContext={accessContext}
-                locale={currentLocale}
-                isPlainLanguageMode={isPlainLanguageMode}
-                onProceedToAccessNavigation={() => setPatientStep('access_location')}
-                onProceedToTeachBack={() => setPatientStep('teach_back')}
-              />
-            )}
+              {patientStep === 'recommendation' && ruleOutput && (
+                <RecommendationScreen
+                  scenario={selectedPathway}
+                  answers={patientAnswers}
+                  ruleOutput={ruleOutput}
+                  accessContext={accessContext}
+                  locale={currentLocale}
+                  isPlainLanguageMode={isPlainLanguageMode}
+                  onProceedToAccessNavigation={() => setPatientStep('access_location')}
+                  onProceedToTeachBack={() => setPatientStep('teach_back')}
+                />
+              )}
 
-            {patientStep === 'teach_back' && ruleOutput && (
-              <TeachBackModal
-                recommendedDisposition={ruleOutput.disposition}
-                locale={currentLocale}
-                onProceedToFeedback={() => setPatientStep('feedback')}
-              />
-            )}
+              {patientStep === 'teach_back' && ruleOutput && (
+                <TeachBackModal
+                  recommendedDisposition={ruleOutput.disposition}
+                  locale={currentLocale}
+                  onProceedToFeedback={() => setPatientStep('feedback')}
+                />
+              )}
 
-            {patientStep === 'feedback' && ruleOutput && (
-              <PatientFeedbackForm
-                sessionId={sessionId}
-                scenario={selectedPathway}
-                disposition={ruleOutput.disposition}
-                ruleId={ruleOutput.ruleId}
-                ruleVersion={ruleOutput.ruleVersion}
-                onFeedbackSubmitted={resetPatientFlow}
-              />
-            )}
-          </>
-        )}
+              {patientStep === 'feedback' && ruleOutput && (
+                <PatientFeedbackForm
+                  sessionId={sessionId}
+                  scenario={selectedPathway}
+                  disposition={ruleOutput.disposition}
+                  ruleId={ruleOutput.ruleId}
+                  ruleVersion={ruleOutput.ruleVersion}
+                  onFeedbackSubmitted={resetPatientFlow}
+                />
+              )}
+            </>
+          )}
 
-        {activeTab === 'demo' && (
-          <DemoRunner onLoadDemoCase={handleLoadDemoCase} />
-        )}
+          {activeTab === 'demo' && (
+            <DemoRunner onLoadDemoCase={handleLoadDemoCase} />
+          )}
 
-        {activeTab === 'staff' && (
-          <StaffDashboard />
-        )}
+          {activeTab === 'staff' && (
+            <StaffDashboard />
+          )}
 
-        {activeTab === 'audit' && (
-          <AuditTrailView />
-        )}
-      </main>
+          {activeTab === 'audit' && (
+            <AuditTrailView />
+          )}
+        </main>
 
-      {/* Academic Footer */}
-      <Footer />
-    </div>
+        {/* Academic Footer */}
+        <Footer />
+      </div>
+    </ViewModeProvider>
   );
 }
 

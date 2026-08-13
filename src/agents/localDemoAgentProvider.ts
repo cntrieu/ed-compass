@@ -543,37 +543,50 @@ export class LocalDemoAgentProvider implements IAgentProvider {
     accessContext?: PatientAccessContext
   ): Agent2NavigationOutput {
     const locale = handoff.preferredLanguage || 'en';
-    const displayTitle = translateEmergencyTitle(locale, ruleOutput.messageKey);
+    let displayTitle = '';
     let displaySubtitle = '';
     let plainLanguageRationale = ruleOutput.explanation;
     const nextSteps: string[] = [];
 
-    switch (ruleOutput.disposition) {
-      case 'CALL_911_NOW':
-        displaySubtitle = getTranslation(locale, 'CALL_911_NOW_SUBTITLE');
-        nextSteps.push('Call 9-1-1 or have someone call for you immediately.');
-        nextSteps.push('Stay calm and follow dispatcher instructions.');
-        break;
-      case 'GO_TO_ED_NOW':
-        displaySubtitle = getTranslation(locale, 'GO_TO_ED_NOW_SUBTITLE');
-        nextSteps.push('Proceed directly to the nearest Emergency Department.');
-        nextSteps.push('Do not drive yourself if feeling uncoordinated, confused, or severely unwell.');
-        break;
-      case 'SAME_DAY_CLINICAL_ASSESSMENT':
-        displaySubtitle = getTranslation(locale, 'SAME_DAY_ASSESSMENT_SUBTITLE');
-        nextSteps.push('Visit an Urgent and Primary Care Centre (UPCC), walk-in clinic, or primary care provider today.');
-        nextSteps.push('Call HealthLink BC at 8-1-1 if you need help finding an open facility.');
-        break;
-      case 'CONTACT_811_OR_PRIMARY_CARE':
-        displaySubtitle = getTranslation(locale, 'CONTACT_811_SUBTITLE');
-        nextSteps.push('Call HealthLink BC at 8-1-1 to speak with a Registered Nurse.');
-        nextSteps.push('Book an appointment with your family physician or nurse practitioner.');
-        break;
-      case 'HOME_MONITOR_WITH_SAFETY_NET':
-        displaySubtitle = getTranslation(locale, 'HOME_MONITOR_SUBTITLE');
-        nextSteps.push('Follow general home care measures as outlined.');
-        nextSteps.push('Monitor closely for any new or worsening symptoms.');
-        break;
+    // Special case for Transplant recipient in fever pathway
+    if (ruleOutput.ruleId === 'FEVER-H04' || ruleOutput.messageKey === 'TRANSPLANT_TITLE') {
+      displayTitle = getTranslation(locale, 'TRANSPLANT_TITLE');
+      displaySubtitle = getTranslation(locale, 'TRANSPLANT_SUBTITLE');
+      nextSteps.push('Contact your transplant team immediately.');
+      nextSteps.push('Proceed to the nearest Emergency Department if your transplant team is unavailable.');
+    } else {
+      switch (ruleOutput.disposition) {
+        case 'CALL_911_NOW':
+          displayTitle = getTranslation(locale, 'CALL_911_NOW_TITLE');
+          displaySubtitle = getTranslation(locale, 'CALL_911_NOW_SUBTITLE');
+          nextSteps.push('Call 9-1-1 or have someone call for you immediately.');
+          nextSteps.push('Stay calm and follow dispatcher instructions.');
+          break;
+        case 'GO_TO_ED_NOW':
+          displayTitle = getTranslation(locale, 'GO_TO_ED_NOW_TITLE');
+          displaySubtitle = getTranslation(locale, 'GO_TO_ED_NOW_SUBTITLE');
+          nextSteps.push('Proceed directly to the nearest Emergency Department.');
+          nextSteps.push('Do not drive yourself if feeling uncoordinated, confused, or severely unwell.');
+          break;
+        case 'SAME_DAY_CLINICAL_ASSESSMENT':
+          displayTitle = getTranslation(locale, 'SAME_DAY_ASSESSMENT_TITLE');
+          displaySubtitle = getTranslation(locale, 'SAME_DAY_ASSESSMENT_SUBTITLE');
+          nextSteps.push('Visit an Urgent and Primary Care Centre (UPCC), walk-in clinic, or primary care provider today.');
+          nextSteps.push('Call HealthLink BC at 8-1-1 if you need help finding an open facility.');
+          break;
+        case 'CONTACT_811_OR_PRIMARY_CARE':
+          displayTitle = getTranslation(locale, 'CONTACT_811_TITLE');
+          displaySubtitle = getTranslation(locale, 'CONTACT_811_SUBTITLE');
+          nextSteps.push('Call HealthLink BC at 8-1-1 to speak with a Registered Nurse.');
+          nextSteps.push('Book an appointment with your family physician or nurse practitioner.');
+          break;
+        case 'HOME_MONITOR_WITH_SAFETY_NET':
+          displayTitle = getTranslation(locale, 'HOME_MONITOR_TITLE');
+          displaySubtitle = getTranslation(locale, 'HOME_MONITOR_SUBTITLE');
+          nextSteps.push('Follow general home care measures as outlined.');
+          nextSteps.push('Monitor closely for any new or worsening symptoms.');
+          break;
+      }
     }
 
     // Default access context if omitted

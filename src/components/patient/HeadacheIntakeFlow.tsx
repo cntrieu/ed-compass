@@ -15,10 +15,7 @@ type HeadacheStep =
   | 'LIFE_THREAT'
   | 'THUNDERCLAP'
   | 'NEUROLOGICAL'
-  | 'AURA_CHECK'
-  | 'SYSTEMIC_FLAGS'
   | 'EYE_EMERGENCY'
-  | 'EYE_VISION_CHECK'
   | 'PREGNANCY'
   | 'HIGH_RISK'
   | 'TRAUMA'
@@ -47,10 +44,7 @@ export const HeadacheIntakeFlow: React.FC<HeadacheIntakeFlowProps> = ({
       case 'LIFE_THREAT':
       case 'THUNDERCLAP':
       case 'NEUROLOGICAL':
-      case 'AURA_CHECK':
-      case 'SYSTEMIC_FLAGS':
       case 'EYE_EMERGENCY':
-      case 'EYE_VISION_CHECK':
         return 'Safety';
       case 'PREGNANCY':
       case 'HIGH_RISK':
@@ -129,52 +123,34 @@ export const HeadacheIntakeFlow: React.FC<HeadacheIntakeFlowProps> = ({
     if (!res.shouldStop) setCurrentStep('NEUROLOGICAL');
   };
 
-  // --- STEP 3: NEUROLOGICAL SUBMIT ---
+  // --- STEP 3: NEUROLOGICAL & SYSTEMIC SUBMIT ---
   const handleNeurologicalSubmit = () => {
     const list = answers.neurologicalFlags || ['NONE_OF_THESE'];
-    const updated = { ...answers, neurologicalFlags: list, selectedNeurologicalSymptoms: list };
+    const hasFeverStiffNeck = list.includes('fever_stiff_neck_rash');
+    const systemicFlags = hasFeverStiffNeck ? ['fever_stiff_neck'] : ['NONE_OF_THESE'];
 
-    // Check if visual symptoms selected
-    const hasVisual = list.includes('vision_loss') || list.includes('double_vision');
-    if (hasVisual) {
-      setAnswers(updated);
-      setCurrentStep('AURA_CHECK');
-    } else {
-      const res = updateAndEvaluate(updated);
-      if (!res.shouldStop) setCurrentStep('SYSTEMIC_FLAGS');
-    }
-  };
-
-  // --- STEP 3B: AURA CHECK SELECT ---
-  const handleAuraCheckSelect = (val: 'usual_aura' | 'new_different') => {
     const updated = {
       ...answers,
-      usualAura: val === 'usual_aura' ? 'Yes' : 'No',
-      newVisualSymptom: val === 'new_different' ? 'Yes' : 'No'
+      neurologicalFlags: list,
+      selectedNeurologicalSymptoms: list,
+      systemicFlags: systemicFlags,
+      selectedSystemicRedFlags: systemicFlags
     };
-    const res = updateAndEvaluate(updated);
-    if (!res.shouldStop) setCurrentStep('SYSTEMIC_FLAGS');
-  };
 
-  // --- STEP 4: SYSTEMIC FLAGS SUBMIT ---
-  const handleSystemicFlagsSubmit = () => {
-    const list = answers.systemicFlags || ['NONE_OF_THESE'];
-    const updated = { ...answers, systemicFlags: list, selectedSystemicRedFlags: list };
     const res = updateAndEvaluate(updated);
     if (!res.shouldStop) setCurrentStep('EYE_EMERGENCY');
   };
 
-  // --- STEP 5: EYE EMERGENCY SELECT ---
+  // --- STEP 4: EYE EMERGENCY SELECT ---
   const handleEyeEmergencySelect = (val: 'Yes' | 'No') => {
-    if (val === 'Yes') {
-      const updated = { ...answers, painfulRedEye: 'Yes' };
-      setAnswers(updated);
-      setCurrentStep('EYE_VISION_CHECK');
-    } else {
-      const updated = { ...answers, painfulRedEye: 'No', eyeVisionChange: 'No' };
-      const res = updateAndEvaluate(updated);
-      if (!res.shouldStop) setCurrentStep('PREGNANCY');
-    }
+    const updated = {
+      ...answers,
+      painfulRedEye: val,
+      eyeVisionChange: val,
+      visualDisturbance: val === 'Yes' ? 'halos' : 'none'
+    };
+    const res = updateAndEvaluate(updated);
+    if (!res.shouldStop) setCurrentStep('PREGNANCY');
   };
 
   // --- STEP 5B: EYE VISION CHECK SELECT ---
@@ -354,17 +330,8 @@ export const HeadacheIntakeFlow: React.FC<HeadacheIntakeFlowProps> = ({
       case 'NEUROLOGICAL':
         setCurrentStep('THUNDERCLAP');
         break;
-      case 'AURA_CHECK':
-        setCurrentStep('NEUROLOGICAL');
-        break;
-      case 'SYSTEMIC_FLAGS':
-        setCurrentStep('NEUROLOGICAL');
-        break;
       case 'EYE_EMERGENCY':
-        setCurrentStep('SYSTEMIC_FLAGS');
-        break;
-      case 'EYE_VISION_CHECK':
-        setCurrentStep('EYE_EMERGENCY');
+        setCurrentStep('NEUROLOGICAL');
         break;
       case 'PREGNANCY':
         setCurrentStep('EYE_EMERGENCY');
@@ -490,11 +457,9 @@ export const HeadacheIntakeFlow: React.FC<HeadacheIntakeFlowProps> = ({
 
           <div className="space-y-2.5">
             {[
-              { id: 'unresponsive', label: 'I am difficult to wake, cannot stay awake, or have lost consciousness' },
+              { id: 'unresponsive', label: 'I cannot stay awake, am very hard to wake, or am barely responding' },
               { id: 'seizure_now', label: 'A seizure is happening now' },
-              { id: 'stroke_like', label: 'I have sudden new weakness on one side, facial drooping, or major difficulty speaking' },
-              { id: 'severe_imbalance', label: 'I suddenly cannot walk safely or have severe loss of balance' },
-              { id: 'critically_unwell', label: 'I appear critically unwell or am rapidly becoming less responsive' },
+              { id: 'stroke_like', label: 'I have sudden new weakness, facial drooping, major difficulty speaking, walking, or keeping my balance' },
               { id: 'NONE_OF_THESE', label: 'None of these' }
             ].map((opt) => {
               const currentList = answers.lifeThreats || ['NONE_OF_THESE'];
@@ -567,7 +532,7 @@ export const HeadacheIntakeFlow: React.FC<HeadacheIntakeFlowProps> = ({
         </div>
       )}
 
-      {/* STEP 3: NEW NEUROLOGICAL AND VISUAL SYMPTOMS */}
+      {/* STEP 3: NEUROLOGICAL AND SYSTEMIC SYMPTOMS */}
       {currentStep === 'NEUROLOGICAL' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
           <div className="space-y-2">
@@ -584,15 +549,11 @@ export const HeadacheIntakeFlow: React.FC<HeadacheIntakeFlowProps> = ({
 
           <div className="space-y-2.5">
             {[
-              { id: 'weakness', label: 'New weakness or numbness' },
-              { id: 'facial_droop', label: 'New facial drooping' },
-              { id: 'speech_difficulty', label: 'New difficulty speaking or understanding speech' },
-              { id: 'imbalance', label: 'New severe difficulty walking or major loss of balance' },
-              { id: 'confusion', label: 'New confusion or unusual behaviour' },
-              { id: 'fainting', label: 'Fainting or loss of consciousness' },
-              { id: 'seizure', label: 'A new seizure' },
-              { id: 'vision_loss', label: 'New loss of vision' },
-              { id: 'double_vision', label: 'New double vision' },
+              { id: 'numbness', label: 'New numbness' },
+              { id: 'confusion', label: 'Confusion or unusual behaviour' },
+              { id: 'fainting', label: 'Fainting or a seizure that has stopped' },
+              { id: 'vision_loss_double', label: 'New loss of vision or double vision' },
+              { id: 'fever_stiff_neck_rash', label: 'Fever with a stiff neck or a new red or purple rash that does not fade when pressed' },
               { id: 'NONE_OF_THESE', label: 'None of these' }
             ].map((opt) => {
               const currentList = answers.neurologicalFlags || ['NONE_OF_THESE'];
@@ -634,148 +595,26 @@ export const HeadacheIntakeFlow: React.FC<HeadacheIntakeFlowProps> = ({
         </div>
       )}
 
-      {/* STEP 3B: AURA CHECK */}
-      {currentStep === 'AURA_CHECK' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
-          <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-sky-600 bg-sky-50 px-2.5 py-1 rounded-md border border-sky-100 inline-block">
-              Visual Symptoms Check
-            </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
-              Is this visual symptom your usual previously diagnosed migraine aura?
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            {[
-              { label: 'Yes, feels identical to my usual migraine aura', value: 'usual_aura' },
-              { label: 'No, this is new, different, or persistent', value: 'new_different' }
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => handleAuraCheckSelect(opt.value as any)}
-                className="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-sky-500 hover:bg-sky-50 transition-all font-medium text-sm text-slate-800 flex items-center justify-between group"
-              >
-                <span>{opt.label}</span>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-sky-600" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* STEP 4: SERIOUS INFECTION / SYSTEMIC FLAGS */}
-      {currentStep === 'SYSTEMIC_FLAGS' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
-          <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-100 inline-block">
-              Safety Screening — Step 4
-            </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
-              Do any of these apply with your headache?
-            </h2>
-            <p className="text-xs text-slate-500">
-              Select all that apply, or select "None of these".
-            </p>
-          </div>
-
-          <div className="space-y-2.5">
-            {[
-              { id: 'fever_stiff_neck', label: 'Fever with a stiff neck (cannot touch chin to chest)' },
-              { id: 'fever_rash', label: 'Fever with a new unusual rash' },
-              { id: 'fever_confusion', label: 'Fever with confusion or extreme drowsiness' },
-              { id: 'fever_severely_unwell', label: 'Fever and I feel severely unwell' },
-              { id: 'NONE_OF_THESE', label: 'None of these' }
-            ].map((opt) => {
-              const currentList = answers.systemicFlags || ['NONE_OF_THESE'];
-              const isChecked = currentList.includes(opt.id);
-
-              return (
-                <button
-                  key={opt.id}
-                  onClick={() => {
-                    const newList = handleCheckboxToggle(currentList, opt.id);
-                    setAnswers({ ...answers, systemicFlags: newList });
-                  }}
-                  className={`w-full text-left p-3.5 rounded-xl border font-medium text-sm transition-all flex items-center justify-between ${
-                    isChecked
-                      ? 'bg-sky-50 border-sky-500 text-sky-900'
-                      : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'
-                  }`}
-                >
-                  <span>{opt.label}</span>
-                  <div
-                    className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ${
-                      isChecked ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300'
-                    }`}
-                  >
-                    {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <button
-            onClick={handleSystemicFlagsSubmit}
-            className="w-full bg-sky-600 text-white font-bold py-4 rounded-xl shadow hover:bg-sky-700 transition-colors flex items-center justify-center gap-2 text-sm"
-          >
-            <span>Continue</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {/* STEP 5: EYE EMERGENCY SCREEN */}
+      {/* STEP 4: EYE EMERGENCY SCREEN */}
       {currentStep === 'EYE_EMERGENCY' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
           <div className="space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-sky-600 bg-sky-50 px-2.5 py-1 rounded-md border border-sky-100 inline-block">
-              Eye Safety — Step 5
+              Eye Safety
             </span>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
-              Do you have severe eye pain or a very painful red eye with this headache?
+              Do you have severe eye pain or a very painful red eye with your headache?
             </h2>
           </div>
 
           <div className="grid grid-cols-1 gap-3">
             {[
-              { label: 'Yes, severe eye pain or painful red eye', value: 'Yes' },
+              { label: 'Yes', value: 'Yes' },
               { label: 'No', value: 'No' }
             ].map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => handleEyeEmergencySelect(opt.value as any)}
-                className="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-sky-500 hover:bg-sky-50 transition-all font-medium text-sm text-slate-800 flex items-center justify-between group"
-              >
-                <span>{opt.label}</span>
-                <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-sky-600" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* STEP 5B: EYE VISION CHECK SCREEN */}
-      {currentStep === 'EYE_VISION_CHECK' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6 animate-fade-in">
-          <div className="space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-sky-600 bg-sky-50 px-2.5 py-1 rounded-md border border-sky-100 inline-block">
-              Eye Safety — Step 5
-            </span>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 leading-snug">
-              Do you also have a change in your vision (such as blurred vision, halos around lights, or vision loss)?
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3">
-            {[
-              { label: 'Yes, blurred vision, halos, or vision loss', value: 'Yes' },
-              { label: 'No visual change', value: 'No' }
-            ].map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => handleEyeVisionCheckSelect(opt.value as any)}
                 className="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-sky-500 hover:bg-sky-50 transition-all font-medium text-sm text-slate-800 flex items-center justify-between group"
               >
                 <span>{opt.label}</span>
